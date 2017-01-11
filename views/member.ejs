@@ -1,0 +1,124 @@
+<h2 class="content-subhead">Member List</h2>
+			
+<table class="pure-table pure-table-bordered" style="width: 100%;">
+	<thead>
+		<tr>
+			<th>순번</th>
+			<th>팀코드</th>
+			<th>사번</th>
+			<th>이름</th>
+			<th>순서</th>
+			<th>기능</th>
+		</tr>
+	</thead>
+
+	<tbody>
+		<%
+			for (var i=0; i<data.mbrList.length; i++) {
+				var mbr = data.mbrList[i];
+		%>
+		<tr>
+			<td><%= (i+1) %></td>
+			<td><%= mbr.team_cd %></td>
+			<td><%= mbr.emp_no %></td>
+			<td><input type="text" id="input_name_<%= mbr.emp_no %>" value="<%= mbr.name %>"></td>
+			<td><input type="text" id="input_sort_num_<%= mbr.emp_no %>" value="<%= mbr.sort_num %>"></td>
+			<td style="text-align: center;">
+				<button class="pure-button" onclick="f회원수정('<%= mbr.emp_no %>');">수정</button>
+				<button class="pure-button" onclick="f회원삭제('<%= mbr.emp_no %>');">삭제</button>
+			</td>
+		</tr>
+		<%
+			}
+		%>
+		<tr>
+			<td></td>
+			<td></td>
+			<td><input type="text" id="new_emp_no"></td>
+			<td><input type="text" id="new_name"></td>
+			<td><input type="text" id="new_sort_num"></td>
+			<td style="text-align: center;">
+				<button class="pure-button" onclick="f회원등록();">등록</button>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<script>
+function f회원등록() {
+	var paramData = {
+			empNo: $("#new_emp_no").val(),
+			name: $("#new_name").val(),
+			sortNum: $("#new_sort_num").val()
+		};
+
+	if (!paramData.empNo || !paramData.name || !paramData.sortNum) {
+		alert("입력란을 모두 채워주세요.");
+		return;
+	}  
+
+	if (!confirm("Member 등록을 진행할께요.")) return;
+	$.ajax({
+		method: "POST",
+		url: "/member/insert",
+		data: paramData
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			location.reload(true);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+
+function f회원수정(empNo) {
+	var paramData = {
+			empNo: empNo,
+			name: $("#input_name_" + empNo).val(),
+			sortNum: $("#input_sort_num_" + empNo).val()
+		};
+
+	if (!paramData.empNo || !paramData.name || !paramData.sortNum) {
+		alert("입력란을 모두 채워주세요.");
+		return;
+	}  
+
+	if (!confirm("Member 수정을 진행할께요.")) return;
+	$.ajax({
+		method: "POST",
+		url: "/member/update",
+		data: paramData
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			location.reload(true);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+
+function f회원삭제(empNo) {
+	var paramData = {
+			empNo: empNo
+		};
+
+	if (!confirm("Task 데이터는 삭제하지 않습니다.\nMember 삭제를 진행할께요.")) return;
+	$.ajax({
+		method: "POST",
+		url: "/member/delete",
+		data: paramData
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			location.reload(true);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+</script>

@@ -1,0 +1,191 @@
+<style>
+/* jquery-ui의 accordion 모듈의 커스텀 css */
+.jqueryui-accordion {
+	width: 100%;
+	display: none;
+}
+.ui-accordion .ui-accordion-content {
+	padding: 10px;
+}
+
+/* 브라우저 크기에 따라 이전/다음 Task를 감추거나 보이게 할께요. */
+@media screen and (max-width: 1200px) {
+	.td-prev { display: none; }
+	.td-next { display: none; }
+}
+</style>
+
+<div style="text-align: center; margin-top: 10px;">
+	<button class="pure-button" onclick="f날짜변경(-7)">← 이전주</button>
+	<input type="text" class="pure-button" style="width: 100px; font-weight: bold;" readonly value="<%= data.ymd %>" id="std-date" onchange="f날짜변경();">
+	<button class="pure-button" onclick="f날짜변경(7);">다음주 →</button>
+</div>
+
+<div class="pure-form" style="margin-top: 20px;">
+	<div style="float: left;">
+		<select style="padding: .3em .6em;" onchange="location.href='#mbr_'+this.value;"><!-- 한글 표시 문제로 padding .4em -> 03em 변경 -->
+			<option value="">멤버 바로가기</option>
+			<%
+				for (var i=0; i<data.mbrList.length; i++) {
+					var mbr = data.mbrList[i];
+			%>
+			<option value="<%= mbr.emp_no %>"><%= mbr.name %>(<%= mbr.emp_no %>)</option>
+			<%
+				}
+			%>
+		</select>
+	</div>
+	<div style="text-align: right;">
+		<button class="pure-button" id="accordion-expand-all">전체열기</button>
+		<button class="pure-button" id="accordion-collapse-all">전체닫기</button>
+		<button class="pure-button" onclick="$('.jqueryui-accordion').accordion('destroy');" title="텍스트로 보기">텍스트</button>
+	</div>
+</div>
+
+<%
+	for (var i=0; i<data.mbrList.length; i++) {
+		var mbr = data.mbrList[i];
+%>
+
+<div id="mbr_<%= mbr.emp_no %>">
+	<div style="height: 30px;"></div>
+	<div style="float: left;"><span class="content-subhead" style="font-size: 20px;"><%= mbr.name %> (<%= mbr.emp_no %>)</span></div>
+	<div style="text-align: right; margin-bottom: 5px;">
+		<button class="pure-button" onclick="f개인별주이동('prev', '<%= mbr.emp_no %>');">←</button>
+		<button class="pure-button" onclick="f개인별주이동('next', '<%= mbr.emp_no %>');">→</button>
+		<button class="pure-button" onclick="f일감입력열기('insert', '<%= mbr.team_cd %>', '<%= mbr.emp_no %>', '<%= mbr.name %>');">Task 입력</button>
+	</div>
+	<table class="pure-table pure-table-bordered" style="width: 100%;">
+		<thead>
+			<tr>
+				<th style="width: 30px;">구분</th>
+				<th class="td-prev" style="width: 30%;">지난주 (<%= data.termPrev.termStr %>)</th>
+				<th class="td-now" style="width: *;">이번주 (<%= data.termNow.termStr %>)</th>
+				<th class="td-next" style="width: 30%;">다음주 (<%= data.termNext.termStr %>)</th>
+			</tr>
+		</thead>
+	
+		<tbody>
+			<tr>
+				<td style="text-align: center;"><strong>완료</strong></td>
+				<td class="td-prev">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "prev_done" }); %>
+				</td>
+				<td class="td-now">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "now_done" }); %>
+				</td>
+				<td class="td-next">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "next_done" }); %>
+				</td>
+			</tr>
+			<tr>
+				<td style="text-align: center;"><strong>진행</strong></td>
+				<td class="td-prev">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "prev_ing" }); %>
+				</td>
+				<td class="td-now">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "now_ing" }); %>
+				</td>
+				<td class="td-next">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "next_ing" }); %>
+				</td>
+			</tr>
+			<tr>
+				<td style="text-align: center;"><strong>대기</strong></td>
+				<td class="td-prev">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "prev_time" }); %>
+				</td>
+				<td class="td-now">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "now_time" }); %>
+				</td>
+				<td class="td-next">
+					<%- include("include/task-data", { mbr: mbr, taskMap: data.taskMap, taskType: "next_time" }); %>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<%
+	} // ~for(mbrList)
+%>
+
+<script src="js/lib/htmlparser.js"></script><!-- http://ejohn.org/blog/pure-javascript-html-parser/ -->
+<script>
+$(function() {
+
+	// jquery-ui의 accordion 모듈은 기존 랜더링을 한번 바꿔주기 때문에 최초에 감춰놨다가 표시함
+	$(".jqueryui-accordion").show();
+
+	// http://api.jqueryui.com/accordion/		
+	var a = $(".jqueryui-accordion").accordion({
+		active: false,
+		animate: 100,
+		collapsible: true,
+		heightStyle: "content"
+	});
+	// accordion 클릭이벤트 재정의 (그대로 사용하게 되면 한 row씩만 열리고 나머지는 닫는다.)
+	$('.jqueryui-accordion h3.ui-accordion-header').off("click").click(function(){
+	    var _this = $(this);
+	    $('.ui-accordion-header-icon', _this).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+	    _this.next().slideToggle(100);
+	    return false;
+	});
+	// 전체 열기
+	$('#accordion-expand-all').click(function(){
+	    var headers = $('.jqueryui-accordion h3.ui-accordion-header');
+	    $('.ui-accordion-header-icon', headers).removeClass('ui-icon-triangle-1-e').addClass('ui-icon-triangle-1-s');
+	    headers.next().slideDown();
+	});
+	// 전체 닫기
+	$('#accordion-collapse-all').click(function(){
+	    var headers = $('.jqueryui-accordion h3.ui-accordion-header');
+	    $('.ui-accordion-header-icon', headers).removeClass('ui-icon-triangle-1-s').addClass('ui-icon-triangle-1-e');
+	    headers.next().slideUp();
+	});
+	
+	$("#std-date").datepicker({
+		dateFormat: 'yy-mm-dd',
+		prevText: '이전 달',
+		nextText: '다음 달',
+		monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+		monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+		dayNames: ['일','월','화','수','목','금','토'],
+		dayNamesShort: ['일','월','화','수','목','금','토'],
+		dayNamesMin: ['일','월','화','수','목','금','토'],
+		showMonthAfterYear: true,
+		//changeMonth: true,
+		changeYear: true,
+		yearSuffix: '년',
+		showButtonPanel: true,
+		showOtherMonths: true,
+		selectOtherMonths: true,
+		currentText: '오늘', 
+		closeText: '닫기' 
+	});
+
+	// #hash가 있는경우 로딩 후 재이동 (내용이 변경되면서 위치가 틀어주는것을 보정)
+	if (location.hash) {
+		location.href = location.hash;
+	}
+	
+});
+
+function f날짜변경(addDay, empNo) {
+	if (addDay) {
+		var datepickerDate = new Date($("#std-date").val());
+		datepickerDate.setDate(datepickerDate.getDate() + addDay);
+		$("#std-date").val(datepickerDate.toISOString().substring(0, 10));
+	}
+
+	location.href = location.pathname + "?ymd=" + $("#std-date").val() + (empNo ? '#mbr_' + empNo : '');
+}
+
+function f개인별주이동(type, empNo) {
+	if (type == "prev") {
+		f날짜변경(-7, empNo);
+	} else if (type == "next") {
+		f날짜변경(7, empNo);
+	}
+}
+	
+</script>

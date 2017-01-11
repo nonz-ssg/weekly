@@ -1,0 +1,292 @@
+<form id="task-form" class="pure-form pure-form-stacked" style="display: none; font-size: 80%;" title="Task 입력/수정">
+	<input type="hidden" id="proc-type">
+	<input type="hidden" id="task-id">
+	<fieldset>
+        <!-- <legend>Task 입력</legend> -->
+        <div class="pure-g">
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="team-cd"><strong>팀ID</strong></label>
+                <input id="team-cd" class="pure-u-23-24" type="text" readonly required>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="emp-no"><strong>사번</strong></label>
+                <input id="emp-no" class="pure-u-23-24" type="text" readonly required>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="name"><strong>이름</strong></label>
+                <input id="name" class="pure-u-23-24" type="text" readonly required>
+            </div>
+			<div class="pure-u-1 pure-u-md-1-3">
+                <label for="task-start-ymd"><strong>시작일시</strong></label>
+                <input id="task-start-ymd" class="pure-u-23-24" type="text" placeholder="yyyy-mm-dd" maxlength="10">
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="task-end-ymd"><strong>종료일시</strong></label>
+                <input id="task-end-ymd" class="pure-u-23-24" type="text" placeholder="yyyy-mm-dd" maxlength="10">
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="task-priority"><strong>우선순위</strong></label>
+                <select id="task-priority" style="padding: .3em .6em;">
+						<option value="1">보통</option>
+						<option value="2">높은편</option>
+						<option value="3">중요 (강조)</option>
+                </select>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="work-redmind-id"><strong>업무레드마인</strong></label>
+                <input id="work-redmind-id" class="pure-u-23-24" type="text" placeholder="숫자만">
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="build-redmind-id"><strong>배포레드마인</strong></label>
+                <input id="build-redmind-id" class="pure-u-23-24" type="text" placeholder="숫자만">
+            </div>
+            <div class="pure-u-1 pure-u-md-1-3">
+                <label for="task-stat-cd"><strong>상태</strong></label>
+                <select id="task-stat-cd" style="padding: .3em .6em;">
+                    <option value="10">진행</option>
+                    <option value="20">중단</option>
+                    <option value="30">감춤</option>
+                </select>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-1">
+                <label for="task-title"><strong>Task 제목 [필수]</strong></label>
+                <input id="task-title" style="width: 100%" type="text" required>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-1">
+                <label for="task-contents"><strong>내용</strong></label>
+                <textarea id="task-contents" style="width: 100%; height: 130px;" placeholder=""></textarea>
+            </div>
+        </div>
+    </fieldset>
+</form>
+
+<script>
+
+$(function() {
+
+	var dialog = $("#task-form").dialog({
+		autoOpen: false,
+		height: 540,
+		width: 500,
+		modal: true,
+		buttons: {
+			"저장": function() {
+				var procType = $("#proc-type").val();
+				if (procType == "insert") {
+					f일감등록처리();
+				} else if (procType == "update") {
+					f일감수정처리();
+				}
+				//$("#task-form-submit").click(); 
+			},
+			"취소": function() {
+				dialog.dialog( "close" );
+        	}
+		}
+	});
+
+	$("#task-start-ymd,#task-end-ymd").datepicker({
+		dateFormat: 'yy-mm-dd',
+		prevText: '이전 달',
+		nextText: '다음 달',
+		monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+		monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+		dayNames: ['일','월','화','수','목','금','토'],
+		dayNamesShort: ['일','월','화','수','목','금','토'],
+		dayNamesMin: ['일','월','화','수','목','금','토'],
+		showMonthAfterYear: true,
+		//changeMonth: true,
+		changeYear: true,
+		yearSuffix: '년',
+		showButtonPanel: true, 
+		showOtherMonths: true,
+		selectOtherMonths: true,
+		currentText: '오늘', 
+		closeText: '닫기' 
+	});
+	
+});
+
+function f일감입력열기(type, teamCd, empNo, name) {
+	if (type == "insert") {
+		f폼초기화("task-form");
+		$("#team-cd").val(teamCd);
+		$("#emp-no").val(empNo);
+		$("#name").val(name);
+		$("#task-form").attr("title", "Task 입력");
+	} else if (type == "update") {
+		$("#task-form").attr("title", "Task 수정");
+	}
+	$("#proc-type").val(type); // 레이어의 저장버튼 분기처리를 위함
+	location.href = "#mbr_" + $("#emp-no").val(); // 위치이동
+
+	$("#task-form").dialog("open");
+}
+
+function f일감데이터생성및체크() {
+	var paramData = {
+			taskId: $("#task-id").val().trim(),
+			teamCd: $("#team-cd").val().trim(),
+			empNo: $("#emp-no").val().trim(),
+			ymdStart: $("#task-start-ymd").val().trim(),
+			ymdEnd: $("#task-end-ymd").val().trim(),
+			rmNum01: $("#work-redmind-id").val().trim(),
+			rmNum02: $("#build-redmind-id").val().trim(),
+			title: $("#task-title").val().trim(),
+			contents: $("#task-contents").val(),
+			taskStatCd: $("#task-stat-cd").val(),
+			taskPriority: $("#task-priority").val(),
+			regId: "TODO",
+			modId: "TODO"
+		};
+	
+	/* HTML TAG 체크, 보정 (현재는 표시부분에서 escape 처리함)
+	if (paramData.contents) {
+		var convertHtml = HTMLtoXML(paramData.contents);
+		if (paramData.contents != convertHtml) {
+			$("#task-contents").val(convertHtml);
+			alert("내용의 HTML 태그 유효성체크 후 변경사항이 발생했습니다.\n 입력내용을 확인해주세요.");
+		return null;
+		}
+	}
+	*/
+
+	if (!paramData.teamCd || !paramData.empNo) {
+		alert("사원정보가 부족해요.");
+		return null;
+	}
+	if (paramData.ymdStart && !(/[12][0-9]{3}-[01][0-9]-[0-3][0-9]/.test(paramData.ymdStart))) {
+		alert("시작일 날짜 형식은 YYYY-MM-DD로 해주세요.");
+		return null;
+	}
+	if (paramData.ymdEnd && !(/[12][0-9]{3}-[01][0-9]-[0-3][0-9]/.test(paramData.ymdEnd))) {
+		alert("종료일 날짜 형식은 YYYY-MM-DD로 해주세요.");
+		return null;
+	}
+	if ((paramData.ymdStart && paramData.ymdEnd)
+			&& Number(paramData.ymdStart.replace(/-/gi, "")) > Number(paramData.ymdEnd.replace(/-/gi, ""))) {
+		alert ("종료일이 시작일보다 앞서있어요.");
+		return null;
+	} 
+	if (paramData.rmNum01 && !(/^(\d+)$/.test(paramData.rmNum01))) {
+		alert("업무레드마인 번호는 숫자만 가능해요.")
+		return null;
+	}
+	if (paramData.rmNum02 && !(/^(\d+)$/.test(paramData.rmNum02))) {
+		alert("배포레드마인 번호는 숫자만 가능해요.")
+		return null;
+	}
+	if (!paramData.title) {
+		alert("Task 제목은 꼭 입력해주세요.");
+		return null;
+	}
+	
+	if (!paramData.ymdStart || !paramData.ymdEnd) {
+		if (!confirm("시작/종료일시가 모두 입력되지 않은 경우\n대기상태로 표시됩니다.\n그래도 그냥 진행하실래요?")) {
+			return null;
+		}
+	}
+	return paramData;
+}
+
+function f일감등록처리() {
+	var paramData = f일감데이터생성및체크();
+	if (!paramData) { return; }
+
+	if (!confirm("Task 등록을 진행할께요.")) return;
+	$.ajax({
+		method: "POST",
+		url: "/task-insert",
+		data: paramData
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			location.reload(true);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+
+function f일감수정(taskId) {
+	$.ajax({
+		method: "POST",
+		url: "/task-get",
+		data: { taskId: taskId }
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			f폼초기화("task-form");
+			// DB데이터 form에 세팅
+			$("#task-id").val(data.resData.task_id);
+			$("#team-cd").val(data.resData.team_cd);
+			$("#emp-no").val(data.resData.emp_no);
+			$("#name").val("수정모드");
+			if (data.resData.ymd_start) {
+				$("#task-start-ymd").val(data.resData.ymd_start.substring(0, 4)
+						+ "-" + data.resData.ymd_start.substring(4, 6)
+						+ "-" + data.resData.ymd_start.substring(6, 8));
+			}
+			if (data.resData.ymd_end) {
+				$("#task-end-ymd").val(data.resData.ymd_end.substring(0, 4)
+						+ "-" + data.resData.ymd_end.substring(4, 6)
+						+ "-" + data.resData.ymd_end.substring(6, 8));
+			}
+			$("#work-redmind-id").val(data.resData.rm_num_01);
+			$("#build-redmind-id").val(data.resData.rm_num_02);
+			$("#task-title").val(data.resData.title);
+			$("#task-contents").val(data.resData.contents);
+			$("#task-stat-cd").val(data.resData.task_stat_cd);
+			$("#task-priority").val(data.resData.task_priority);
+			
+			f일감입력열기("update", data.resData.task_id);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+
+function f일감수정처리() {
+	var paramData = f일감데이터생성및체크();
+	if (!paramData) { return; }
+
+	if (!confirm("Task 수정을 진행할께요.")) return;
+	$.ajax({
+		method: "POST",
+		url: "/task-update",
+		data: paramData
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			location.reload(true);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+
+function f일감삭제(taskId) {
+	if (!confirm("선택한 Task 삭제를 진행할께요.")) return;
+	$.ajax({
+		method: "POST",
+		url: "/task-delete",
+		data: { taskId: taskId }
+	}).done(function(data) {
+		if (data.resCd == "SUCCESS") {
+			location.reload(true);
+		} else {
+			alert(data.resCd);
+		}
+	}).fail(function() {
+	}).always(function() {
+	});
+}
+
+function f폼초기화(formElementId) {
+	// 폼 입력 초기화, jquery("").reset() 은 방법이 다르다.
+	document.getElementById(formElementId).reset();
+}
+</script>

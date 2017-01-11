@@ -1,0 +1,59 @@
+<%#
+ - 일감 표시부분을 재사용하기 위한 include-ejs
+%>
+<div class="jqueryui-accordion">
+	<%
+		for (var i=0; i<taskMap[mbr.emp_no][taskType].length; i++) {
+			var task = taskMap[mbr.emp_no][taskType][i];
+			
+			var priorityCss = "";
+			if (task.task_priority == '3') {
+				priorityCss = "background: gold;";
+			} else if (task.task_priority == '2') {
+				priorityCss = "font-weight: bold;";
+			} else if (task.task_priority == '1') {
+				//priorityCss = "";
+			}
+			
+			var statCss = "";
+			if (task.task_stat_cd == "20") {
+				statCss = "text-decoration: line-through;";
+			}
+	%>
+	<h3 class="accordion-header" style="<%= priorityCss %><%= statCss %>">
+		<%= task.title %>
+		<% if (task.ymd_end) { %>
+			(완료일 <%= task.ymd_end.substring(4, 6) %>/<%= task.ymd_end.substring(6, 8) %>)
+		<% } %>
+	</h3>
+	
+	<div>
+		<% if (task.rm_num_01 || task.rm_num_02) { %>
+			<p>
+				<% if (task.rm_num_01) { %>® 업무 RM : <a href="https://redmine.ssgadm.com/redmine/issues/<%= task.rm_num_01 %>" target="_blank" title="새창으로 열기">#<%= task.rm_num_01 %></a><% } %>
+				<% if (task.rm_num_01 && task.rm_num_02) { %>&nbsp;/&nbsp;<% } %>
+				<% if (task.rm_num_02) { %>® 배포 RM : <a href="https://redmine.ssgadm.com/redmine/issues/<%= task.rm_num_02 %>" target="_blank" title="새창으로 열기">#<%= task.rm_num_02 %></a><% } %>
+			</p>
+			<% if (task.contents) { %>
+			<hr>
+			<% } %>
+		<% } %>
+		
+		<% if (task.contents) { %>
+			<%# textarea 데이터 변경 처리 %>
+			<p style="line-height: 1.6em;"><%-
+					task.contents
+						.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;")
+						.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;")
+				%></p>
+		<% } %>
+		
+		<div style="text-align: right;">
+			<img src="img/btn_mod.png" style="width: 18px; height: 18px; cursor: pointer;" title="수정" onclick="f일감수정('<%= task.task_id %>');">
+			<img src="img/btn_del.png" style="width: 18px; height: 18px; cursor: pointer;" title="삭제" onclick="f일감삭제('<%= task.task_id %>');">
+		</div>
+	</div>
+	<%
+		}
+	%>
+</div>

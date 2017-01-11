@@ -1,0 +1,18 @@
+{
+  "name": "weekly",
+  "version": "1.0.0",
+  "description": "weekly for ssg",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "123063",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "ejs": "^2.5.2",
+    "express": "^4.14.0",
+    "node-schedule": "^1.1.1",
+    "sqlite3": "^3.1.6"
+  }
+}

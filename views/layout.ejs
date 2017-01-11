@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= headTitle %></title>
+<link rel="shortcut icon" href="/img/icon/weekly.ico">
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"><%# http://purecss.io/ %>
+
+<!--[if lte IE 8]>
+    <link rel="stylesheet" href="/css/purecss/side-menu-old-ie.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-old-ie-min.css">
+<![endif]-->
+<!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="/css/purecss/side-menu.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+<!--<![endif]-->
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<style>
+
+/* 메뉴 레이아웃 관련 스타일 */
+#menu .pure-menu-heading {
+    font-size: 125%;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: #fff;
+    margin-top: 0;
+    padding: 0.5em 0.8em;
+    text-transform: uppercase;
+    background: black;
+}
+#menu .pure-menu-heading:hover,
+#menu .pure-menu-heading:focus {
+    color: #999;
+}
+#menu .pure-menu-selected {
+    background: #1f8dd6;
+}
+
+/* content 영역 커스텀 스타일 */	
+.content {
+    max-width: 95%;
+    font-size: 80%;
+}
+
+/* HR 태그 스타일 : 예쁘게 */
+hr {
+	border: 0;
+	height: 0;
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
+	brder-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 테이블 요소 정렬 */
+th { text-align: center; }
+td { vertical-align: text-top; }
+
+</style>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</head>
+
+<body>
+
+<div id="layout">
+    <!-- Menu toggle -->
+    <a href="#menu" id="menuLink" class="menu-link">
+        <!-- Hamburger icon -->
+        <span></span>
+    </a>
+
+    <div id="menu">
+	    <div class="pure-menu">
+	        <div class="pure-menu">
+	            <a class="pure-menu-heading" href="/">WEEKLY</a>
+	            <ul class="pure-menu-list" id="left-menu-list">
+	            	<li class="pure-menu-item"><a href="/weekly" class="pure-menu-link">Weekly</a></li>
+					<li class="pure-menu-item"><a href="/gantt" class="pure-menu-link">Gantt</a></li>
+					<li class="pure-menu-item"><a href="/task/list" class="pure-menu-link">Tasks</a></li>
+					<li class="pure-menu-item"><a href="/member/list" class="pure-menu-link">Members</a></li>
+	            </ul>
+	        </div>
+	    </div>
+	</div>
+
+    <div id="main">
+
+        <div class="header">
+            <h2><%= contTitle %></h2>
+        </div>
+
+        <div class="content">
+			<%- include(contentEjs, { data: data }); %>
+        </div>
+    </div>
+    
+</div>
+
+<%# Task Form %>
+<%- include("include/task-edit", { }); %>
+
+<script src="/js/purecss/ui.js"></script>
+<script>
+	$(function() {
+	
+		// 선택메뉴 활성화
+		var pathname = location.pathname;
+		$("#left-menu-list > li").each(function() {
+			var href = $(this).find("a").attr("href");
+			if (pathname == href) {
+				$(this).addClass("menu-item-divided pure-menu-selected");
+			}
+		});
+		
+	});
+</script>
+</body>
+</html>

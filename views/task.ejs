@@ -1,0 +1,111 @@
+<h2 class="content-subhead">Task List (수정일시 DESC)</h2>
+
+<div class="pure-form" style="text-align: right; margin-bottom: 10px;">
+	<select style="padding: .3em .6em;" id="select-member" onchange="f멤버필터링();">
+		<option value="">멤버 전체</option>
+		<%
+			for (var i=0; i<data.mbrList.length; i++) {
+				var mbr = data.mbrList[i];
+		%>
+			<option value="<%= mbr.emp_no %>"><%= mbr.name %> (<%= mbr.emp_no %>)</option>
+		<%
+			}
+		%>
+	</select>
+</div>
+
+<table class="pure-table pure-table-bordered" style="width: 100%;">
+	<thead>
+		<tr>
+			<th>순번</th>
+			<th>사번</th>
+			<th>이름</th>
+			<th>Task ID</th>
+			<th>Task 제목</th>
+			<th>기간</th>
+			<th>우선순위</th>
+			<th>상태</th>
+			<th>수정일시</th>
+			<th>기능</th>
+		</tr>
+	</thead>
+	<tbody>
+	<%
+		for (var i=0; i<data.taskList.length; i++) {
+			var task = data.taskList[i];
+	%>
+		<tr>
+			<td><%= (data.pageSize * (data.page-1)) + (i+1) %></td>
+			<td><%= task.emp_no %></td>
+			<td><%= task.name %></td>
+			<td><%= task.task_id %></td>
+			<td><%= task.title %></td>
+			<td style="text-align: center;">
+				<% if (task.ymd_start) { %><%= task.ymd_start.substring(0, 4) + "-" + task.ymd_start.substring(4, 6) + "-" + task.ymd_start.substring(6, 8) %><% } %>
+				<% if (task.ymd_start || task.ymd_end) { %>~<% } %> 
+				<% if (task.ymd_end) { %><%= task.ymd_end.substring(0, 4) + "-" + task.ymd_end.substring(4, 6) + "-" + task.ymd_end.substring(6, 8) %><% } %>
+			</td>
+			<%
+				var priorityCss = "";
+				var priorityName = "보통";
+				if (task.task_priority == '3') {
+					priorityCss = "background: gold;";
+					priorityName = "중요";
+				} else if (task.task_priority == '2') {
+					priorityCss = "font-weight: bold;";
+					priorityName = "높은편";
+				} else if (task.task_priority == '1') {
+				}
+			%>
+			<td style="text-align: center; <%= priorityCss %>">
+				<%= priorityName %>
+			</td>
+			<td style="text-align: center;">
+				<% if (task.task_stat_cd == '10') { %>진행
+				<% } else if (task.task_stat_cd == '20') { %>중단
+				<% } else if (task.task_stat_cd == '30') { %>감춤
+				<% } %>
+			</td>
+			<td style="text-align: center;"><%= task.mod_date %></td>
+			<td style="text-align: center;">
+				<!-- <button class="pure-button" onclick="f일감입력열기('insert', '<%= task.team_cd %>', '<%= task.emp_no %>', '<%= task.name %>');">입력</button> -->
+				<button class="pure-button" onclick="f일감수정('<%= task.task_id %>');">수정</button>
+				<button class="pure-button" onclick="f일감삭제('<%= task.task_id %>');">삭제</button>
+			</td>
+		</tr>
+	<%
+		}
+	%>
+	</tbody>
+</table>
+
+<div style="text-align: center; margin-top: 10px;">
+	<button class="pure-button" onclick="f페이지이동(-1);">← 이전</button>
+	<input type="number" class="pure-button" style="width: 70px;" id="page-num" value="<%= data.page %>" onchange="f페이지이동(0);">
+	<button class="pure-button" onclick="f페이지이동(1);">다음 →</button>
+</div>
+
+<script>
+$(function() {
+
+	$("#select-member").val("<%= data.empNo %>");
+	
+});
+
+function f페이지이동(addNum) {
+	var pageNum = Number($("#page-num").val());
+	if (pageNum + addNum < 1) {
+		return;
+	} 
+	$("#page-num").val(pageNum + addNum);
+	
+	var empNo = $("#select-member").val();
+	
+	location.href = "/task/list?page=" + $("#page-num").val() + "&empNo=" + empNo;
+}
+
+function f멤버필터링() {
+	var empNo = $("#select-member").val();
+	location.href = "/task/list?page=1&empNo=" + empNo;
+}
+</script>

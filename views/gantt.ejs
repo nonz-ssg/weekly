@@ -1,0 +1,236 @@
+<style>
+table {
+	border: 1px solid;
+	table-layout: fixed;
+}
+th,td {
+	height: 22px;
+	font-size: 11px;
+	border: 1px solid #cbcbcb;
+	
+	overflow: hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+a {
+    color: #777;
+}
+a:link    { text-decoration:none; }
+a:visited { text-decoration:none; }
+a:hover   { text-decoration:underline; }
+a:active  { text-decoration:none; }
+</style>
+
+<h2 class="content-subhead">Gantt Chart</h2>
+
+<div class="pure-form" style="margin-bottom: 10px;">
+	<div style="float: left;">
+		<input id="gantt-start-ymd" type="text" placeholder="yyyy-mm-dd" style="width: 100px; text-align: center;" maxlength="10" value="<%= data.dateList[0].ymd %>"> ~
+		<input id="gantt-end-ymd" type="text" placeholder="yyyy-mm-dd" style="width: 100px; text-align: center;" maxlength="10" value="<%= data.dateList[data.dateList.length-1].ymd %>">
+		&nbsp;
+		<button class="pure-button" onclick="f날짜변경();">조회</button>
+	</div>
+	<div style="float: right;"> 
+		<select style="padding: .3em .6em;" id="select-member" onchange="f멤버필터링();">
+			<option value="">멤버 전체</option>
+			<%
+				for (var i=0; i<data.mbrList.length; i++) {
+					var mbr = data.mbrList[i];
+			%>
+			<option value="<%= mbr.emp_no %>"><%= mbr.name %>(<%= mbr.emp_no %>)</option>
+			<%
+				}
+			%>
+		</select>
+	</div>
+	<p style="clear: both;">
+</div>
+
+<div style="float: left;">
+	<table style="width: 360px;">
+		<thead>
+			<tr class="head_tr" style="height: 46px;">
+				<th style="width: 100px;">Name</th>
+				<th style="width: 260px;">Task</th>
+			</tr>
+		</thead>
+		<tbody>
+			<%
+				for (var t=0; t<data.taskList.length; t++) {
+					var task = data.taskList[t];
+					
+					var priorityCss = "";
+					var priorityName = "보통";
+					if (task.task_priority == '3') {
+						priorityCss = "background: gold;";
+						priorityName = "중요";
+					} else if (task.task_priority == '2') {
+						priorityCss = "font-weight: bold;";
+						priorityName = "높은편";
+					} else if (task.task_priority == '1') {
+					}
+			%>
+				<tr>
+					<td class="task_name" style="padding-left: 5px; text-align: center;"><%= data.mbrMap[task.emp_no].name %></td>
+					<td class="task_title" style="padding-left: 5px; <%= priorityCss %>"><a href="javascript:void(0);" onclick="f일감수정('<%= task.task_id %>');return false;" title="<%= task.title %>"><%= task.title %></a></td>
+				</tr>
+			<%
+				}
+			%>
+		</tbody>
+	</table>
+</div>
+
+<div style="overflow: auto;">
+	<table class="table2" style="width: <%= data.dateList.length * 16 %>px;">
+		<thead>
+			<tr class="head_tr">
+				<%
+					var tempMonth = 99;
+					
+					for (var i=0; i<data.dateList.length; i++) {
+						var dateObj = data.dateList[i];
+						var month = dateObj.date.getMonth() + 1;
+						
+						// 월을 묶어주기 위해 colspan 수 계산
+						var colspanCnt = 0;
+						if (month != tempMonth) { 
+							for (var i2=0; i2<data.dateList.length; i2++) {
+								var sameMonth = data.dateList[i2].date.getMonth() + 1;
+								if (month == sameMonth) {
+									colspanCnt++;
+								}
+							}
+							tempMonth = month;
+						} else {
+							continue;
+						}
+						
+						var addStyle = "";
+						if (i > 0 && dateObj.date.getDate() == 1) {
+							addStyle += "border-left: solid 2px #cbcbcb;";
+						}
+				%>
+					<th style="<%= addStyle %>" colspan="<%= colspanCnt %>"><%= month %>월</th>
+				<%
+					}
+				%>
+			</tr>
+			<tr class="head_tr">
+				<%
+					for (var i=0; i<data.dateList.length; i++) {
+						var dateObj = data.dateList[i];
+						
+						var addStyle = "";
+						if (dateObj.ymd == data.ymd) { // 오늘
+							addStyle += "background-color: #FAFAD2;";
+						} else if (dateObj.day == "0") { // 일요일
+							addStyle += "background-color: LavenderBlush;";
+						} else if (dateObj.day == "6") { // 토요일
+							addStyle += "background-color: AliceBlue;";
+						}
+						
+						if (i > 0 && dateObj.date.getDate() == 1) {
+							addStyle += "border-left: solid 2px #cbcbcb;";
+						}
+				%>
+					<th style="width: 16px; <%= addStyle %>"><%= dateObj.date.getDate() %></th>
+				<%
+					}
+				%>
+			</tr>
+		</thead>
+		<tbody>
+			<%
+				for (var t=0; t<data.taskList.length; t++) {
+					var task = data.taskList[t];
+			%>
+				<tr title="<%= task.title %> (<%= task.ymd_start %> ~ <%= task.ymd_end %>)">
+					<%
+						for (var i=0; i<data.dateList.length; i++) {
+							var dateObj = data.dateList[i];
+							
+							var addStyle = "";
+							if (dateObj.day == "0") { // 일요일
+								addStyle += "background-color: LavenderBlush;";
+							} else if (dateObj.day == "6") { // 토요일
+								addStyle += "background-color: AliceBlue;";
+							} else if (Number(task.ymd_start) <= Number(dateObj.ymd.replace(/-/gi, ""))
+									&& Number(dateObj.ymd.replace(/-/gi, "")) <= Number(task.ymd_end)) {
+								addStyle += "background-color: LightGray;";
+							} 
+							
+							if (i > 0 && dateObj.date.getDate() == 1) {
+								addStyle += "border-left: solid 2px #cbcbcb;";
+							}
+					%>
+						<td style="<%= addStyle %>"></td>
+					<%
+						}
+					%>
+				</tr>
+			<%
+				}
+			%>
+		</tbody>
+	</table>
+<div>
+
+<script>
+$(function() {
+
+	$("#select-member").val("<%= data.empNo %>");
+	
+	$(".table2 > tbody > tr").on("mouseover", function() {
+		$(this).css("border", "1px double black");
+	}).on("mouseleave", function() {
+		$(this).css("border", "");
+	});
+	
+	/* row 클릭시 날짜부분을 해당 row 위에 노출하기 위한 스크립트였음
+	$("tbody > tr").on("mousedown", function() {
+		$(this).before($("thead").html());
+	});
+	$("tbody").on("mouseup", function() {
+		$("tbody > tr.head_tr").remove();
+	});
+	$("td.task_name, td.task_title").on("mousedown", function(e) {
+		e.stopPropagation();
+	});
+	*/
+	
+	$("#gantt-start-ymd,#gantt-end-ymd").datepicker({
+		dateFormat: 'yy-mm-dd',
+		prevText: '이전 달',
+		nextText: '다음 달',
+		monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+		monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+		dayNames: ['일','월','화','수','목','금','토'],
+		dayNamesShort: ['일','월','화','수','목','금','토'],
+		dayNamesMin: ['일','월','화','수','목','금','토'],
+		showMonthAfterYear: true,
+		//changeMonth: true,
+		changeYear: true,
+		yearSuffix: '년',
+		showButtonPanel: true, 
+		showOtherMonths: true,
+		selectOtherMonths: true,
+		currentText: '오늘', 
+		closeText: '닫기' 
+	});
+	
+});
+
+function f멤버필터링() {
+	var empNo = $("#select-member").val();
+	location.href = "/gantt?empNo=" + empNo + "&startDate=<%= data.startDate %>&endDate=<%= data.endDate %>";
+}
+
+function f날짜변경() {
+	var startDate = $("#gantt-start-ymd").val();
+	var endDate = $("#gantt-end-ymd").val();
+	location.href = "/gantt?empNo=<%= data.empNo %>&startDate=" + startDate + "&endDate=" + endDate;
+}
+
+</script>
